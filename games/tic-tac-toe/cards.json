@@ -1,1 +1,16 @@
-{ }
+{
+  "X": {
+    "name": "Cross",
+    "tags": ["cross"],
+    "attributes": {},
+    "logic": {},
+    "meta": {}
+  },
+  "O": {
+    "name": "Nought",
+    "tags": ["nought"],
+    "attributes": {},
+    "logic": {},
+    "meta": {}
+  }
+}

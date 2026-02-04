@@ -1,1 +1,587 @@
-{ }
+{
+  "red-0": {
+    "name": "Red 0",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 0,
+      "points": 0,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-1": {
+    "name": "Red 1",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 1,
+      "points": 1,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-2": {
+    "name": "Red 2",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 2,
+      "points": 2,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-3": {
+    "name": "Red 3",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 3,
+      "points": 3,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-4": {
+    "name": "Red 4",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 4,
+      "points": 4,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-5": {
+    "name": "Red 5",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 5,
+      "points": 5,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-6": {
+    "name": "Red 6",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 6,
+      "points": 6,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-7": {
+    "name": "Red 7",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 7,
+      "points": 7,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-8": {
+    "name": "Red 8",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 8,
+      "points": 8,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-9": {
+    "name": "Red 9",
+    "tags": ["number", "red"],
+    "attributes": {
+      "value": 9,
+      "points": 9,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-skip": {
+    "name": "Red Skip",
+    "tags": ["action", "red"],
+    "attributes": {
+      "points": 20,
+      "type": "skip"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-reverse": {
+    "name": "Red Reverse",
+    "tags": ["action", "red"],
+    "attributes": {
+      "points": 20,
+      "type": "reverse"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "red-draw-two": {
+    "name": "Red Draw 2",
+    "tags": ["action", "red", "draw"],
+    "attributes": {
+      "points": 20,
+      "type": "draw-two",
+      "draw": 2
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-0": {
+    "name": "Yellow 0",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 0,
+      "points": 0,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-1": {
+    "name": "Yellow 1",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 1,
+      "points": 1,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-2": {
+    "name": "Yellow 2",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 2,
+      "points": 2,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-3": {
+    "name": "Yellow 3",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 3,
+      "points": 3,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-4": {
+    "name": "Yellow 4",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 4,
+      "points": 4,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-5": {
+    "name": "Yellow 5",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 5,
+      "points": 5,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-6": {
+    "name": "Yellow 6",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 6,
+      "points": 6,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-7": {
+    "name": "Yellow 7",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 7,
+      "points": 7,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-8": {
+    "name": "Yellow 8",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 8,
+      "points": 8,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-9": {
+    "name": "Yellow 9",
+    "tags": ["number", "yellow"],
+    "attributes": {
+      "value": 9,
+      "points": 9,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-skip": {
+    "name": "Yellow Skip",
+    "tags": ["action", "yellow"],
+    "attributes": {
+      "points": 20,
+      "type": "skip"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-reverse": {
+    "name": "Yellow Reverse",
+    "tags": ["action", "yellow"],
+    "attributes": {
+      "points": 20,
+      "type": "reverse"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "yellow-draw-two": {
+    "name": "Yellow Draw 2",
+    "tags": ["action", "yellow", "draw"],
+    "attributes": {
+      "points": 20,
+      "type": "draw-two",
+      "draw": 2
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-0": {
+    "name": "Green 0",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 0,
+      "points": 0,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-1": {
+    "name": "Green 1",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 1,
+      "points": 1,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-2": {
+    "name": "Green 2",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 2,
+      "points": 2,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-3": {
+    "name": "Green 3",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 3,
+      "points": 3,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-4": {
+    "name": "Green 4",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 4,
+      "points": 4,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-5": {
+    "name": "Green 5",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 5,
+      "points": 5,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-6": {
+    "name": "Green 6",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 6,
+      "points": 6,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-7": {
+    "name": "Green 7",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 7,
+      "points": 7,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-8": {
+    "name": "Green 8",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 8,
+      "points": 8,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-9": {
+    "name": "Green 9",
+    "tags": ["number", "green"],
+    "attributes": {
+      "value": 9,
+      "points": 9,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-skip": {
+    "name": "Green Skip",
+    "tags": ["action", "green"],
+    "attributes": {
+      "points": 20,
+      "type": "skip"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-reverse": {
+    "name": "Green Reverse",
+    "tags": ["action", "green"],
+    "attributes": {
+      "points": 20,
+      "type": "reverse"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "green-draw-two": {
+    "name": "Green Draw 2",
+    "tags": ["action", "green", "draw"],
+    "attributes": {
+      "points": 20,
+      "type": "draw-two",
+      "draw": 2
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-0": {
+    "name": "Blue 0",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 0,
+      "points": 0,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-1": {
+    "name": "Blue 1",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 1,
+      "points": 1,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-2": {
+    "name": "Blue 2",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 2,
+      "points": 2,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-3": {
+    "name": "Blue 3",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 3,
+      "points": 3,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-4": {
+    "name": "Blue 4",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 4,
+      "points": 4,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-5": {
+    "name": "Blue 5",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 5,
+      "points": 5,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-6": {
+    "name": "Blue 6",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 6,
+      "points": 6,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-7": {
+    "name": "Blue 7",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 7,
+      "points": 7,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-8": {
+    "name": "Blue 8",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 8,
+      "points": 8,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-9": {
+    "name": "Blue 9",
+    "tags": ["number", "blue"],
+    "attributes": {
+      "value": 9,
+      "points": 9,
+      "type": "number"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-skip": {
+    "name": "Blue Skip",
+    "tags": ["action", "blue"],
+    "attributes": {
+      "points": 20,
+      "type": "skip"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-reverse": {
+    "name": "Blue Reverse",
+    "tags": ["action", "blue"],
+    "attributes": {
+      "points": 20,
+      "type": "reverse"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "blue-draw-two": {
+    "name": "Blue Draw 2",
+    "tags": ["action", "blue", "draw"],
+    "attributes": {
+      "points": 20,
+      "type": "draw-two",
+      "draw": 2
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "wild": {
+    "name": "Wild",
+    "tags": ["wild"],
+    "attributes": {
+      "points": 50,
+      "type": "wild"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "wild-draw-four": {
+    "name": "Wild Draw 4",
+    "tags": ["wild", "draw"],
+    "attributes": {
+      "points": 50,
+      "type": "wild-draw-four",
+      "draw": 4
+    },
+    "logic": {},
+    "meta": {}
+  }
+}

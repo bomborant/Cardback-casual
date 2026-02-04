@@ -1,1 +1,522 @@
-{ }
+{
+  "hearts-ace": {
+    "name": "Ace of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "ace"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-2": {
+    "name": "2 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "2"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-3": {
+    "name": "3 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "3"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-4": {
+    "name": "4 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "4"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-5": {
+    "name": "5 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "5"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-6": {
+    "name": "6 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "6"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-7": {
+    "name": "7 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "7"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-8": {
+    "name": "8 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "8"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-9": {
+    "name": "9 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "9"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-10": {
+    "name": "10 of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "10"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-jack": {
+    "name": "Jack of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "jack"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-queen": {
+    "name": "Queen of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "queen"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "hearts-king": {
+    "name": "King of Hearts",
+    "tags": ["hearts", "red"],
+    "attributes": {
+      "suit": "hearts",
+      "rank": "king"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-ace": {
+    "name": "Ace of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "ace"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-2": {
+    "name": "2 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "2"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-3": {
+    "name": "3 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "3"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-4": {
+    "name": "4 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "4"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-5": {
+    "name": "5 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "5"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-6": {
+    "name": "6 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "6"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-7": {
+    "name": "7 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "7"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-8": {
+    "name": "8 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "8"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-9": {
+    "name": "9 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "9"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-10": {
+    "name": "10 of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "10"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-jack": {
+    "name": "Jack of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "jack"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-queen": {
+    "name": "Queen of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "queen"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "diamonds-king": {
+    "name": "King of Diamonds",
+    "tags": ["diamonds", "red"],
+    "attributes": {
+      "suit": "diamonds",
+      "rank": "king"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-ace": {
+    "name": "Ace of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "ace"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-2": {
+    "name": "2 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "2"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-3": {
+    "name": "3 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "3"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-4": {
+    "name": "4 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "4"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-5": {
+    "name": "5 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "5"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-6": {
+    "name": "6 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "6"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-7": {
+    "name": "7 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "7"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-8": {
+    "name": "8 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "8"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-9": {
+    "name": "9 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "9"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-10": {
+    "name": "10 of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "10"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-jack": {
+    "name": "Jack of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "jack"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-queen": {
+    "name": "Queen of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "queen"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "clubs-king": {
+    "name": "King of Clubs",
+    "tags": ["clubs", "black"],
+    "attributes": {
+      "suit": "clubs",
+      "rank": "king"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-ace": {
+    "name": "Ace of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "ace"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-2": {
+    "name": "2 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "2"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-3": {
+    "name": "3 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "3"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-4": {
+    "name": "4 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "4"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-5": {
+    "name": "5 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "5"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-6": {
+    "name": "6 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "6"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-7": {
+    "name": "7 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "7"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-8": {
+    "name": "8 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "8"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-9": {
+    "name": "9 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "9"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-10": {
+    "name": "10 of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "10"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-jack": {
+    "name": "Jack of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "jack"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-queen": {
+    "name": "Queen of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "queen"
+    },
+    "logic": {},
+    "meta": {}
+  },
+  "spades-king": {
+    "name": "King of Spades",
+    "tags": ["spades", "black"],
+    "attributes": {
+      "suit": "spades",
+      "rank": "king"
+    },
+    "logic": {},
+    "meta": {}
+  }
+}
