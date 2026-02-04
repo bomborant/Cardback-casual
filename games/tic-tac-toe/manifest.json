@@ -1,7 +1,6 @@
 {
   "_schema": {
-    "version": 1,
-    "engine_version": "0.1.0"
+    "version": 1
   },
   "id": "tic-tac-toe",
   "title": "Tic Tac Toe",
@@ -9,8 +8,8 @@
   "author": "Bomborant",
   "description": "Tic Tac Toe demo but with cards",
   "resources": {
-    "rules_url": "rules.lua",
-    "cards_url": "cards.json",
-    "assets_url": "assets.json"
+    "rules_url": "./rules.lua",
+    "cards_url": "./cards.json",
+    "assets_url": "./cards"
   }
 }

@@ -1,7 +1,6 @@
 {
   "_schema": {
-    "version": 1,
-    "engine_version": "0.1.0"
+    "version": 1
   },
   "id": "uno",
   "title": "Uno",
@@ -9,8 +8,8 @@
   "author": "Bomborant",
   "description": "Uno game demo",
   "resources": {
-    "rules_url": "rules.lua",
-    "cards_url": "cards.json",
-    "assets_url": "assets.json"
+    "rules_url": "./rules.lua",
+    "cards_url": "./cards.json",
+    "assets_url": "/home/ant/Projects/Cardback-casual/decks/uno/cards"
   }
 }
