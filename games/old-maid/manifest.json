@@ -4,12 +4,12 @@
   },
   "id": "old-maid",
   "title": "Old Maid",
-  "version": "1.0.0",
+  "version": "0.1",
   "author": "Bomborant",
   "description": "Old Maid game demo",
   "resources": {
     "rules_url": "./rules.lua",
     "cards_url": "./cards.json",
-    "assets_url": "/home/ant/Projects/Cardback-casual/decks/poker/cards"
+    "assets_url": "https://github.com/bomborant/Cardback-casual/releases/download/pack/poker/0.1/assets.zip"
   }
 }
