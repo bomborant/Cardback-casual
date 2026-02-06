@@ -1,0 +1,208 @@
+name: Release Game Pack
+
+# When does this workflow run?
+on:
+  push:
+    tags:
+      # Matches: game-name/X.Y.Z where X, Y, Z can be any number (1, 10, 100, etc.)
+      - '*/[0-9]+.[0-9]+'
+
+# What does it do?
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    # Required for creating releases and pushing tags
+    permissions:
+      contents: write
+    
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Step 2: Parse the tag to extract game name and version
+      - name: Parse tag info
+        id: tag_info
+        run: |
+          # GITHUB_REF is like "refs/tags/tic-tac-toe/1.0.0"
+          # We strip the prefix to get "tic-tac-toe/1.0.0"
+          TAG="${GITHUB_REF#refs/tags/}"
+          
+          # Split into game name and version
+          GAME_NAME="${TAG%/*}"      # Everything before last /
+          VERSION="${TAG##*/}"        # Everything after last /
+          
+          # Save for later steps
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "game_name=$GAME_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Log for debugging
+          echo "📦 Game: $GAME_NAME"
+          echo "🏷️  Version: $VERSION"
+      
+      # Step 3: Find the source directory (games/ or decks/)
+      - name: Determine source directory
+        id: source_dir
+        run: |
+          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
+          
+          if [ -d "games/$GAME_NAME" ]; then
+            echo "dir=games/$GAME_NAME" >> $GITHUB_OUTPUT
+            echo "📂 Found in games/$GAME_NAME"
+          elif [ -d "decks/$GAME_NAME" ]; then
+            echo "dir=decks/$GAME_NAME" >> $GITHUB_OUTPUT
+            echo "📂 Found in decks/$GAME_NAME"
+          else
+            echo "❌ Error: Could not find game or deck: $GAME_NAME"
+            echo "Available games:"
+            ls -la games/ 2>/dev/null || echo "  (no games folder)"
+            echo "Available decks:"
+            ls -la decks/ 2>/dev/null || echo "  (no decks folder)"
+            exit 1
+          fi
+      
+      # Step 4: Prepare all the release assets
+      - name: Prepare release assets
+        run: |
+          SOURCE_DIR="${{ steps.source_dir.outputs.dir }}"
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          ASSETS_DIR="release_assets"
+          
+          mkdir -p "$ASSETS_DIR"
+          
+          echo "=== Preparing release assets ==="
+          
+          # Copy manifest and update version
+          if [ -f "$SOURCE_DIR/manifest.json" ]; then
+            jq --arg v "$VERSION" '.version = $v' "$SOURCE_DIR/manifest.json" > "$ASSETS_DIR/manifest.json"
+            echo "✓ manifest.json (version set to $VERSION)"
+          else
+            echo "❌ Error: manifest.json not found in $SOURCE_DIR"
+            exit 1
+          fi
+          
+          # Copy rules.lua if exists
+          if [ -f "$SOURCE_DIR/rules.lua" ]; then
+            cp "$SOURCE_DIR/rules.lua" "$ASSETS_DIR/"
+            echo "✓ rules.lua"
+          else
+            echo "⚠️ No rules.lua (this is fine for deck packs)"
+          fi
+          
+          # Copy cards.json if exists
+          if [ -f "$SOURCE_DIR/cards.json" ]; then
+            cp "$SOURCE_DIR/cards.json" "$ASSETS_DIR/"
+            echo "✓ cards.json"
+          else
+            echo "⚠️ No cards.json"
+          fi
+          
+          # Create assets.zip from cards folder
+          if [ -d "$SOURCE_DIR/cards" ]; then
+            cd "$SOURCE_DIR/cards"
+            zip -r "../../../$ASSETS_DIR/assets.zip" ./*
+            cd -
+            echo "✓ assets.zip ($(unzip -l $ASSETS_DIR/assets.zip | tail -1 | awk '{print $2}') files)"
+          else
+            echo "⚠️ No cards folder to zip"
+          fi
+          
+          echo ""
+          echo "=== Release assets ready ==="
+          ls -la "$ASSETS_DIR"
+      
+      # Step 5: Create the versioned release
+      - name: Create versioned release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_info.outputs.tag }}
+          name: "${{ steps.tag_info.outputs.game_name }} v${{ steps.tag_info.outputs.version }}"
+          body: |
+            ## ${{ steps.tag_info.outputs.game_name }} v${{ steps.tag_info.outputs.version }}
+            
+            ### 📥 Installation
+            Add this game to Cardback using the manifest URL:
+            ```
+            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/manifest.json
+            ```
+            
+            ### 🔄 Latest Version
+            To always get the latest version:
+            ```
+            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.game_name }}/latest/manifest.json
+            ```
+          files: release_assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Step 6: Update the "latest" tag to point to this commit
+      - name: Update latest tag
+        run: |
+          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
+          LATEST_TAG="${GAME_NAME}/latest"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Delete existing latest tag (local and remote)
+          git tag -d "$LATEST_TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$LATEST_TAG" 2>/dev/null || true
+          
+          # Create new latest tag
+          git tag "$LATEST_TAG"
+          git push origin "$LATEST_TAG"
+          
+          echo "✓ Updated $LATEST_TAG tag"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Step 7: Create/update the "latest" release
+      - name: Update latest release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_info.outputs.game_name }}/latest
+          name: "${{ steps.tag_info.outputs.game_name }} (Latest)"
+          prerelease: false
+          body: |
+            ## ${{ steps.tag_info.outputs.game_name }} - Latest Release
+            
+            **📌 Current version: v${{ steps.tag_info.outputs.version }}**
+            
+            This release always contains the latest version.
+            
+            ### 📥 Installation
+            ```
+            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.game_name }}/latest/manifest.json
+            ```
+          files: release_assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Step 8: Summary
+      - name: Print summary
+        run: |
+          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          REPO="${{ github.repository }}"
+          
+          echo ""
+          echo "=============================================="
+          echo "🎉 Release complete!"
+          echo "=============================================="
+          echo ""
+          echo "📦 $GAME_NAME v$VERSION"
+          echo ""
+          echo "🔗 Versioned release:"
+          echo "   https://github.com/$REPO/releases/tag/$GAME_NAME/$VERSION"
+          echo ""
+          echo "🔗 Latest release:"
+          echo "   https://github.com/$REPO/releases/tag/$GAME_NAME/latest"
+          echo ""
+          echo "📋 Manifest URL (versioned):"
+          echo "   https://github.com/$REPO/releases/download/$GAME_NAME/$VERSION/manifest.json"
+          echo ""
+          echo "📋 Manifest URL (latest):"
+          echo "   https://github.com/$REPO/releases/download/$GAME_NAME/latest/manifest.json"
+          echo ""
