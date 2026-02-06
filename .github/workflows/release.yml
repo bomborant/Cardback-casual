@@ -10,7 +10,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     
-    # Skip if this is a 'latest' tag (prevents double-run)
     if: "!contains(github.ref, '/latest')"
     
     permissions:
@@ -66,7 +65,7 @@ jobs:
             echo ""
             echo "Searched locations:"
             case "$RELEASE_TYPE" in
-              game)  echo "  - games/$PACK_NAME" ;;
+              game) echo "  - games/$PACK_NAME" ;;
               pack) echo "  - packs/$PACK_NAME"; echo "  - decks/$PACK_NAME" ;;
             esac
             echo ""
@@ -110,13 +109,17 @@ jobs:
           echo "=== Preparing release assets ==="
           echo ""
           
-          INCLUDED=""
+          # Track what's included
+          HAS_MANIFEST="false"
+          HAS_RULES="false"
+          HAS_CARDS="false"
+          HAS_ASSETS="false"
           
           # Manifest
           if [ -f "$SOURCE_DIR/manifest.json" ]; then
             jq --arg v "$VERSION" '.version = $v' "$SOURCE_DIR/manifest.json" > "$ASSETS_DIR/manifest.json"
             echo "✓ manifest.json (version: $VERSION)"
-            INCLUDED="${INCLUDED}manifest,"
+            HAS_MANIFEST="true"
           elif [ "$REQUIRE_MANIFEST" = "true" ]; then
             echo "❌ Error: manifest.json required for 'game' releases"
             exit 1
@@ -128,7 +131,7 @@ jobs:
           if [ -f "$SOURCE_DIR/rules.lua" ]; then
             cp "$SOURCE_DIR/rules.lua" "$ASSETS_DIR/"
             echo "✓ rules.lua"
-            INCLUDED="${INCLUDED}rules,"
+            HAS_RULES="true"
           else
             echo "⊘ rules.lua (not found, skipping)"
           fi
@@ -137,7 +140,7 @@ jobs:
           if [ -f "$SOURCE_DIR/cards.json" ]; then
             cp "$SOURCE_DIR/cards.json" "$ASSETS_DIR/"
             echo "✓ cards.json"
-            INCLUDED="${INCLUDED}cards,"
+            HAS_CARDS="true"
           else
             echo "⊘ cards.json (not found, skipping)"
           fi
@@ -148,7 +151,7 @@ jobs:
             if [ "$FILE_COUNT" -gt 0 ]; then
               (cd "$SOURCE_DIR/cards" && zip -r "../../../$ASSETS_DIR/assets.zip" ./*)
               echo "✓ assets.zip ($FILE_COUNT files)"
-              INCLUDED="${INCLUDED}assets,"
+              HAS_ASSETS="true"
             else
               echo "⊘ cards/ folder empty (skipping)"
             fi
@@ -166,8 +169,174 @@ jobs:
             exit 1
           fi
           
-          INCLUDED="${INCLUDED%,}"
-          echo "included=$INCLUDED" >> $GITHUB_OUTPUT
+          echo "has_manifest=$HAS_MANIFEST" >> $GITHUB_OUTPUT
+          echo "has_rules=$HAS_RULES" >> $GITHUB_OUTPUT
+          echo "has_cards=$HAS_CARDS" >> $GITHUB_OUTPUT
+          echo "has_assets=$HAS_ASSETS" >> $GITHUB_OUTPUT
+      
+      - name: Check for changelog
+        id: changelog
+        run: |
+          SOURCE_DIR="${{ steps.config.outputs.dir }}"
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          
+          CHANGELOG_CONTENT=""
+          
+          # Check for CHANGELOG.md in the pack folder
+          if [ -f "$SOURCE_DIR/CHANGELOG.md" ]; then
+            # Extract section for this version
+            # Matches headers like: ## 1.0 or ## [1.0] or ## v1.0
+            CHANGELOG_CONTENT=$(awk "/^## \\[?v?${VERSION}\\]?/,/^## \\[?v?[0-9]/" "$SOURCE_DIR/CHANGELOG.md" | head -n -1)
+            
+            if [ -n "$CHANGELOG_CONTENT" ]; then
+              echo "✓ Found changelog for v$VERSION"
+            else
+              echo "⊘ No changelog entry for v$VERSION"
+            fi
+          else
+            echo "⊘ No CHANGELOG.md found"
+          fi
+          
+          # Save to file for multiline support
+          echo "$CHANGELOG_CONTENT" > /tmp/changelog.md
+          
+          if [ -n "$CHANGELOG_CONTENT" ]; then
+            echo "has_changelog=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changelog=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate release body
+        id: body
+        run: |
+          TAG="${{ steps.tag_info.outputs.tag }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          REPO="${{ github.repository }}"
+          
+          HAS_MANIFEST="${{ steps.prepare.outputs.has_manifest }}"
+          HAS_RULES="${{ steps.prepare.outputs.has_rules }}"
+          HAS_CARDS="${{ steps.prepare.outputs.has_cards }}"
+          HAS_ASSETS="${{ steps.prepare.outputs.has_assets }}"
+          HAS_CHANGELOG="${{ steps.changelog.outputs.has_changelog }}"
+          
+          BASE_URL="https://github.com/$REPO/releases/download/$TAG"
+          
+          # Start building release body
+          cat << 'HEADER' > /tmp/release_body.md
+          ## $PACK_NAME v$VERSION
+          
+          **Type:** `$RELEASE_TYPE`
+          
+          ### 📥 Asset Links
+          HEADER
+          
+          # Replace variables in header
+          sed -i "s/\$PACK_NAME/$PACK_NAME/g" /tmp/release_body.md
+          sed -i "s/\$VERSION/$VERSION/g" /tmp/release_body.md
+          sed -i "s/\$RELEASE_TYPE/$RELEASE_TYPE/g" /tmp/release_body.md
+          
+          # Add asset links (manifest first if exists)
+          if [ "$HAS_MANIFEST" = "true" ]; then
+            echo "**manifest.json** (add this to Cardback):" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "$BASE_URL/manifest.json" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "" >> /tmp/release_body.md
+          fi
+          
+          if [ "$HAS_RULES" = "true" ]; then
+            echo "**rules.lua:**" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "$BASE_URL/rules.lua" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "" >> /tmp/release_body.md
+          fi
+          
+          if [ "$HAS_CARDS" = "true" ]; then
+            echo "**cards.json:**" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "$BASE_URL/cards.json" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "" >> /tmp/release_body.md
+          fi
+          
+          if [ "$HAS_ASSETS" = "true" ]; then
+            echo "**assets.zip:**" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "$BASE_URL/assets.zip" >> /tmp/release_body.md
+            echo '```' >> /tmp/release_body.md
+            echo "" >> /tmp/release_body.md
+          fi
+          
+          # Add changelog if exists
+          if [ "$HAS_CHANGELOG" = "true" ]; then
+            echo "---" >> /tmp/release_body.md
+            echo "" >> /tmp/release_body.md
+            echo "### 📝 Changes" >> /tmp/release_body.md
+            cat /tmp/changelog.md >> /tmp/release_body.md
+          fi
+          
+          echo "Generated release body:"
+          cat /tmp/release_body.md
+      
+      - name: Generate latest release body
+        if: steps.config.outputs.create_latest == 'true'
+        run: |
+          TAG="${{ steps.tag_info.outputs.tag }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
+          VERSION="${{ steps.tag_info.outputs.version }}"
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          REPO="${{ github.repository }}"
+          
+          HAS_MANIFEST="${{ steps.prepare.outputs.has_manifest }}"
+          HAS_RULES="${{ steps.prepare.outputs.has_rules }}"
+          HAS_CARDS="${{ steps.prepare.outputs.has_cards }}"
+          HAS_ASSETS="${{ steps.prepare.outputs.has_assets }}"
+          
+          LATEST_TAG="$RELEASE_TYPE/$PACK_NAME/latest"
+          BASE_URL="https://github.com/$REPO/releases/download/$LATEST_TAG"
+          
+          cat << HEADER > /tmp/latest_body.md
+          ## $PACK_NAME - Latest Release
+          
+          **📌 Current version: v$VERSION**
+          
+          ### 📥 Asset Links
+          HEADER
+          
+          if [ "$HAS_MANIFEST" = "true" ]; then
+            echo "**manifest.json** (add this to Cardback):" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "$BASE_URL/manifest.json" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "" >> /tmp/latest_body.md
+          fi
+          
+          if [ "$HAS_RULES" = "true" ]; then
+            echo "**rules.lua:**" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "$BASE_URL/rules.lua" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "" >> /tmp/latest_body.md
+          fi
+          
+          if [ "$HAS_CARDS" = "true" ]; then
+            echo "**cards.json:**" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "$BASE_URL/cards.json" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "" >> /tmp/latest_body.md
+          fi
+          
+          if [ "$HAS_ASSETS" = "true" ]; then
+            echo "**assets.zip:**" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "$BASE_URL/assets.zip" >> /tmp/latest_body.md
+            echo '```' >> /tmp/latest_body.md
+            echo "" >> /tmp/latest_body.md
+          fi
       
       - name: Delete existing versioned release (if any)
         run: |
@@ -183,16 +352,7 @@ jobs:
           name: "${{ steps.tag_info.outputs.release_type }}/${{ steps.tag_info.outputs.pack_name }} v${{ steps.tag_info.outputs.version }}"
           draft: false
           prerelease: false
-          body: |
-            ## ${{ steps.tag_info.outputs.pack_name }} v${{ steps.tag_info.outputs.version }}
-            
-            **Type:** `${{ steps.tag_info.outputs.release_type }}`
-            **Includes:** ${{ steps.prepare.outputs.included }}
-            
-            ### 📥 Base URL
-            ```
-            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/
-            ```
+          body_path: /tmp/release_body.md
           files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -204,7 +364,6 @@ jobs:
           PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
           LATEST_TAG="${RELEASE_TYPE}/${PACK_NAME}/latest"
           
-          # Delete the release (this removes the draft too)
           gh release delete "$LATEST_TAG" --yes 2>/dev/null || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -219,11 +378,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Delete existing tag (local and remote)
           git tag -d "$LATEST_TAG" 2>/dev/null || true
           git push origin ":refs/tags/$LATEST_TAG" 2>/dev/null || true
           
-          # Create new tag
           git tag "$LATEST_TAG"
           git push origin "$LATEST_TAG"
           
@@ -239,16 +396,7 @@ jobs:
           name: "${{ steps.tag_info.outputs.pack_name }} (Latest)"
           draft: false
           prerelease: false
-          body: |
-            ## ${{ steps.tag_info.outputs.pack_name }} - Latest Release
-            
-            **📌 Current version: v${{ steps.tag_info.outputs.version }}**
-            **Includes:** ${{ steps.prepare.outputs.included }}
-            
-            ### 📥 Manifest URL (always latest)
-            ```
-            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.release_type }}/${{ steps.tag_info.outputs.pack_name }}/latest/manifest.json
-            ```
+          body_path: /tmp/latest_body.md
           files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -261,7 +409,6 @@ jobs:
           REPO="${{ github.repository }}"
           TAG="${{ steps.tag_info.outputs.tag }}"
           CREATE_LATEST="${{ steps.config.outputs.create_latest }}"
-          INCLUDED="${{ steps.prepare.outputs.included }}"
           
           echo ""
           echo "=============================================="
@@ -269,13 +416,9 @@ jobs:
           echo "=============================================="
           echo ""
           echo "📦 $RELEASE_TYPE/$PACK_NAME v$VERSION"
-          echo "📁 Included: $INCLUDED"
           echo ""
           echo "🔗 Release:"
           echo "   https://github.com/$REPO/releases/tag/$TAG"
-          echo ""
-          echo "📂 Base URL:"
-          echo "   https://github.com/$REPO/releases/download/$TAG/"
           
           if [ "$CREATE_LATEST" = "true" ]; then
             echo ""
