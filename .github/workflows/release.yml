@@ -3,194 +3,284 @@ name: Release Game Pack
 on:
   push:
     tags:
-      - '*/[0-9]+.[0-9]+'
+      - 'game/*/[0-9]+.[0-9]+'
+      - 'pack/*/[0-9]+.[0-9]+'
 
 jobs:
   release:
     runs-on: ubuntu-latest
-
+    
+    # Skip if this is a 'latest' tag (prevents double-run)
+    if: "!contains(github.ref, '/latest')"
+    
     permissions:
       contents: write
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
       - name: Parse tag info
         id: tag_info
         run: |
-          # GITHUB_REF is like "refs/tags/tic-tac-toe/1.0.0"
-          # We strip the prefix to get "tic-tac-toe/1.0.0"
           TAG="${GITHUB_REF#refs/tags/}"
           
-          # Split into game name and version
-          GAME_NAME="${TAG%/*}"      # Everything before last /
-          VERSION="${TAG##*/}"        # Everything after last /
+          RELEASE_TYPE=$(echo "$TAG" | cut -d'/' -f1)
+          PACK_NAME=$(echo "$TAG" | cut -d'/' -f2)
+          VERSION=$(echo "$TAG" | cut -d'/' -f3)
           
-          # Save for later steps
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "game_name=$GAME_NAME" >> $GITHUB_OUTPUT
+          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "pack_name=$PACK_NAME" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           
-          # Log for debugging
-          echo "📦 Game: $GAME_NAME"
+          echo "📦 Type: $RELEASE_TYPE"
+          echo "📦 Pack: $PACK_NAME"
           echo "🏷️  Version: $VERSION"
-
+      
       - name: Determine source directory
-        id: source_dir
+        id: config
         run: |
-          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
           
-          if [ -d "games/$GAME_NAME" ]; then
-            echo "dir=games/$GAME_NAME" >> $GITHUB_OUTPUT
-            echo "📂 Found in games/$GAME_NAME"
-          elif [ -d "decks/$GAME_NAME" ]; then
-            echo "dir=decks/$GAME_NAME" >> $GITHUB_OUTPUT
-            echo "📂 Found in decks/$GAME_NAME"
-          else
-            echo "❌ Error: Could not find game or deck: $GAME_NAME"
-            echo "Available games:"
-            ls -la games/ 2>/dev/null || echo "  (no games folder)"
-            echo "Available decks:"
-            ls -la decks/ 2>/dev/null || echo "  (no decks folder)"
+          SOURCE_DIR=""
+          
+          case "$RELEASE_TYPE" in
+            game)
+              if [ -d "games/$PACK_NAME" ]; then
+                SOURCE_DIR="games/$PACK_NAME"
+              fi
+              ;;
+            pack)
+              if [ -d "packs/$PACK_NAME" ]; then
+                SOURCE_DIR="packs/$PACK_NAME"
+              elif [ -d "decks/$PACK_NAME" ]; then
+                SOURCE_DIR="decks/$PACK_NAME"
+              fi
+              ;;
+          esac
+          
+          if [ -z "$SOURCE_DIR" ] || [ ! -d "$SOURCE_DIR" ]; then
+            echo "❌ Error: Could not find source directory for $RELEASE_TYPE/$PACK_NAME"
+            echo ""
+            echo "Searched locations:"
+            case "$RELEASE_TYPE" in
+              game)  echo "  - games/$PACK_NAME" ;;
+              pack) echo "  - packs/$PACK_NAME"; echo "  - decks/$PACK_NAME" ;;
+            esac
+            echo ""
+            echo "Available directories:"
+            echo "games/:"
+            ls -1 games/ 2>/dev/null || echo "  (not found)"
+            echo "packs/:"
+            ls -1 packs/ 2>/dev/null || echo "  (not found)"
+            echo "decks/:"
+            ls -1 decks/ 2>/dev/null || echo "  (not found)"
             exit 1
           fi
-
+          
+          if [ "$RELEASE_TYPE" = "game" ]; then
+            REQUIRE_MANIFEST="true"
+            CREATE_LATEST="true"
+          else
+            REQUIRE_MANIFEST="false"
+            CREATE_LATEST="false"
+          fi
+          
+          echo "dir=$SOURCE_DIR" >> $GITHUB_OUTPUT
+          echo "require_manifest=$REQUIRE_MANIFEST" >> $GITHUB_OUTPUT
+          echo "create_latest=$CREATE_LATEST" >> $GITHUB_OUTPUT
+          
+          echo ""
+          echo "📂 Source: $SOURCE_DIR"
+          echo "📋 Require manifest: $REQUIRE_MANIFEST"
+          echo "🔄 Create latest: $CREATE_LATEST"
+      
       - name: Prepare release assets
+        id: prepare
         run: |
-          SOURCE_DIR="${{ steps.source_dir.outputs.dir }}"
+          SOURCE_DIR="${{ steps.config.outputs.dir }}"
           VERSION="${{ steps.tag_info.outputs.version }}"
+          REQUIRE_MANIFEST="${{ steps.config.outputs.require_manifest }}"
           ASSETS_DIR="release_assets"
           
           mkdir -p "$ASSETS_DIR"
           
           echo "=== Preparing release assets ==="
+          echo ""
           
-          # Copy manifest and update version
+          INCLUDED=""
+          
+          # Manifest
           if [ -f "$SOURCE_DIR/manifest.json" ]; then
             jq --arg v "$VERSION" '.version = $v' "$SOURCE_DIR/manifest.json" > "$ASSETS_DIR/manifest.json"
-            echo "✓ manifest.json (version set to $VERSION)"
-          else
-            echo "❌ Error: manifest.json not found in $SOURCE_DIR"
+            echo "✓ manifest.json (version: $VERSION)"
+            INCLUDED="${INCLUDED}manifest,"
+          elif [ "$REQUIRE_MANIFEST" = "true" ]; then
+            echo "❌ Error: manifest.json required for 'game' releases"
             exit 1
+          else
+            echo "⊘ manifest.json (not found, skipping)"
           fi
           
-          # Copy rules.lua if exists
+          # Rules
           if [ -f "$SOURCE_DIR/rules.lua" ]; then
             cp "$SOURCE_DIR/rules.lua" "$ASSETS_DIR/"
             echo "✓ rules.lua"
+            INCLUDED="${INCLUDED}rules,"
           else
-            echo "⚠️ No rules.lua (this is fine for deck packs)"
+            echo "⊘ rules.lua (not found, skipping)"
           fi
           
-          # Copy cards.json if exists
+          # Cards.json
           if [ -f "$SOURCE_DIR/cards.json" ]; then
             cp "$SOURCE_DIR/cards.json" "$ASSETS_DIR/"
             echo "✓ cards.json"
+            INCLUDED="${INCLUDED}cards,"
           else
-            echo "⚠️ No cards.json"
+            echo "⊘ cards.json (not found, skipping)"
           fi
           
-          # Create assets.zip from cards folder
+          # Assets zip
           if [ -d "$SOURCE_DIR/cards" ]; then
-            cd "$SOURCE_DIR/cards"
-            zip -r "../../../$ASSETS_DIR/assets.zip" ./*
-            cd -
-            echo "✓ assets.zip ($(unzip -l $ASSETS_DIR/assets.zip | tail -1 | awk '{print $2}') files)"
+            FILE_COUNT=$(ls -1 "$SOURCE_DIR/cards" | wc -l)
+            if [ "$FILE_COUNT" -gt 0 ]; then
+              (cd "$SOURCE_DIR/cards" && zip -r "../../../$ASSETS_DIR/assets.zip" ./*)
+              echo "✓ assets.zip ($FILE_COUNT files)"
+              INCLUDED="${INCLUDED}assets,"
+            else
+              echo "⊘ cards/ folder empty (skipping)"
+            fi
           else
-            echo "⚠️ No cards folder to zip"
+            echo "⊘ cards/ folder (not found, skipping)"
           fi
           
           echo ""
-          echo "=== Release assets ready ==="
+          echo "=== Release assets ==="
           ls -la "$ASSETS_DIR"
-
+          
+          if [ -z "$(ls -A $ASSETS_DIR 2>/dev/null)" ]; then
+            echo ""
+            echo "❌ Error: No assets to release!"
+            exit 1
+          fi
+          
+          INCLUDED="${INCLUDED%,}"
+          echo "included=$INCLUDED" >> $GITHUB_OUTPUT
+      
+      - name: Delete existing versioned release (if any)
+        run: |
+          TAG="${{ steps.tag_info.outputs.tag }}"
+          gh release delete "$TAG" --yes 2>/dev/null || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Create versioned release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag_info.outputs.tag }}
-          name: "${{ steps.tag_info.outputs.game_name }} v${{ steps.tag_info.outputs.version }}"
+          name: "${{ steps.tag_info.outputs.release_type }}/${{ steps.tag_info.outputs.pack_name }} v${{ steps.tag_info.outputs.version }}"
+          draft: false
+          prerelease: false
           body: |
-            ## ${{ steps.tag_info.outputs.game_name }} v${{ steps.tag_info.outputs.version }}
+            ## ${{ steps.tag_info.outputs.pack_name }} v${{ steps.tag_info.outputs.version }}
             
-            ### 📥 Setup
-            Add this game to Cardback using the manifest URL:
-            ```
-            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/manifest.json
-            ```
+            **Type:** `${{ steps.tag_info.outputs.release_type }}`
+            **Includes:** ${{ steps.prepare.outputs.included }}
             
-            ### 🔄 Latest Version
-            To always get the latest version:
+            ### 📥 Base URL
             ```
-            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.game_name }}/latest/manifest.json
+            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/
             ```
           files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update latest tag
+      
+      - name: Delete existing latest release (if any)
+        if: steps.config.outputs.create_latest == 'true'
         run: |
-          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
-          LATEST_TAG="${GAME_NAME}/latest"
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
+          LATEST_TAG="${RELEASE_TYPE}/${PACK_NAME}/latest"
+          
+          # Delete the release (this removes the draft too)
+          gh release delete "$LATEST_TAG" --yes 2>/dev/null || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update latest tag
+        if: steps.config.outputs.create_latest == 'true'
+        run: |
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
+          LATEST_TAG="${RELEASE_TYPE}/${PACK_NAME}/latest"
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Delete existing latest tag (local and remote)
+          # Delete existing tag (local and remote)
           git tag -d "$LATEST_TAG" 2>/dev/null || true
           git push origin ":refs/tags/$LATEST_TAG" 2>/dev/null || true
           
-          # Create new latest tag
+          # Create new tag
           git tag "$LATEST_TAG"
           git push origin "$LATEST_TAG"
           
-          echo "✓ Updated $LATEST_TAG tag"
+          echo "✓ Updated $LATEST_TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update latest release
+      
+      - name: Create latest release
+        if: steps.config.outputs.create_latest == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.tag_info.outputs.game_name }}/latest
-          name: "${{ steps.tag_info.outputs.game_name }} (Latest)"
+          tag_name: ${{ steps.tag_info.outputs.release_type }}/${{ steps.tag_info.outputs.pack_name }}/latest
+          name: "${{ steps.tag_info.outputs.pack_name }} (Latest)"
+          draft: false
           prerelease: false
           body: |
-            ## ${{ steps.tag_info.outputs.game_name }} - Latest Release
+            ## ${{ steps.tag_info.outputs.pack_name }} - Latest Release
             
             **📌 Current version: v${{ steps.tag_info.outputs.version }}**
+            **Includes:** ${{ steps.prepare.outputs.included }}
             
-            This release always contains the latest version.
-            
-            ### 📥 Manifest Url
+            ### 📥 Manifest URL (always latest)
             ```
-            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.game_name }}/latest/manifest.json
+            https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.release_type }}/${{ steps.tag_info.outputs.pack_name }}/latest/manifest.json
             ```
           files: release_assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      
       - name: Print summary
         run: |
-          GAME_NAME="${{ steps.tag_info.outputs.game_name }}"
+          RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
+          PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
           VERSION="${{ steps.tag_info.outputs.version }}"
           REPO="${{ github.repository }}"
+          TAG="${{ steps.tag_info.outputs.tag }}"
+          CREATE_LATEST="${{ steps.config.outputs.create_latest }}"
+          INCLUDED="${{ steps.prepare.outputs.included }}"
           
           echo ""
           echo "=============================================="
           echo "🎉 Release complete!"
           echo "=============================================="
           echo ""
-          echo "📦 $GAME_NAME v$VERSION"
+          echo "📦 $RELEASE_TYPE/$PACK_NAME v$VERSION"
+          echo "📁 Included: $INCLUDED"
           echo ""
-          echo "🔗 Versioned release:"
-          echo "   https://github.com/$REPO/releases/tag/$GAME_NAME/$VERSION"
+          echo "🔗 Release:"
+          echo "   https://github.com/$REPO/releases/tag/$TAG"
           echo ""
-          echo "🔗 Latest release:"
-          echo "   https://github.com/$REPO/releases/tag/$GAME_NAME/latest"
-          echo ""
-          echo "📋 Manifest URL (versioned):"
-          echo "   https://github.com/$REPO/releases/download/$GAME_NAME/$VERSION/manifest.json"
-          echo ""
-          echo "📋 Manifest URL (latest):"
-          echo "   https://github.com/$REPO/releases/download/$GAME_NAME/latest/manifest.json"
+          echo "📂 Base URL:"
+          echo "   https://github.com/$REPO/releases/download/$TAG/"
+          
+          if [ "$CREATE_LATEST" = "true" ]; then
+            echo ""
+            echo "🔄 Latest:"
+            echo "   https://github.com/$REPO/releases/tag/$RELEASE_TYPE/$PACK_NAME/latest"
+          fi
+          
           echo ""
