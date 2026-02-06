@@ -109,7 +109,6 @@ jobs:
           echo "=== Preparing release assets ==="
           echo ""
           
-          # Track what's included
           HAS_MANIFEST="false"
           HAS_RULES="false"
           HAS_CARDS="false"
@@ -182,11 +181,18 @@ jobs:
           
           CHANGELOG_CONTENT=""
           
-          # Check for CHANGELOG.md in the pack folder
           if [ -f "$SOURCE_DIR/CHANGELOG.md" ]; then
-            # Extract section for this version
-            # Matches headers like: ## 1.0 or ## [1.0] or ## v1.0
-            CHANGELOG_CONTENT=$(awk "/^## \\[?v?${VERSION}\\]?/,/^## \\[?v?[0-9]/" "$SOURCE_DIR/CHANGELOG.md" | head -n -1)
+            echo "Found CHANGELOG.md, searching for v$VERSION..."
+            
+            # Extract section: start at version header, stop at next ## or EOF
+            CHANGELOG_CONTENT=$(awk "
+              /^## \\[?v?${VERSION}\\]?/ { found=1; next }
+              found && /^## / { exit }
+              found { print }
+            " "$SOURCE_DIR/CHANGELOG.md")
+            
+            # Trim whitespace
+            CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             
             if [ -n "$CHANGELOG_CONTENT" ]; then
               echo "✓ Found changelog for v$VERSION"
@@ -197,7 +203,6 @@ jobs:
             echo "⊘ No CHANGELOG.md found"
           fi
           
-          # Save to file for multiline support
           echo "$CHANGELOG_CONTENT" > /tmp/changelog.md
           
           if [ -n "$CHANGELOG_CONTENT" ]; then
@@ -223,58 +228,62 @@ jobs:
           
           BASE_URL="https://github.com/$REPO/releases/download/$TAG"
           
-          # Start building release body
-          cat << 'HEADER' > /tmp/release_body.md
+          # Build release body
+          cat << EOF > /tmp/release_body.md
           ## $PACK_NAME v$VERSION
           
-          **Type:** `$RELEASE_TYPE`
+          **Type:** \`$RELEASE_TYPE\`
           
           ### 📥 Asset Links
-          HEADER
+          EOF
           
-          # Replace variables in header
-          sed -i "s/\$PACK_NAME/$PACK_NAME/g" /tmp/release_body.md
-          sed -i "s/\$VERSION/$VERSION/g" /tmp/release_body.md
-          sed -i "s/\$RELEASE_TYPE/$RELEASE_TYPE/g" /tmp/release_body.md
-          
-          # Add asset links (manifest first if exists)
           if [ "$HAS_MANIFEST" = "true" ]; then
-            echo "**manifest.json** (add this to Cardback):" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "$BASE_URL/manifest.json" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "" >> /tmp/release_body.md
+            cat << EOF >> /tmp/release_body.md
+          
+          **manifest.json** (add this to Cardback):
+          \`\`\`
+          $BASE_URL/manifest.json
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_RULES" = "true" ]; then
-            echo "**rules.lua:**" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "$BASE_URL/rules.lua" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "" >> /tmp/release_body.md
+            cat << EOF >> /tmp/release_body.md
+          
+          **rules.lua:**
+          \`\`\`
+          $BASE_URL/rules.lua
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_CARDS" = "true" ]; then
-            echo "**cards.json:**" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "$BASE_URL/cards.json" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "" >> /tmp/release_body.md
+            cat << EOF >> /tmp/release_body.md
+          
+          **cards.json:**
+          \`\`\`
+          $BASE_URL/cards.json
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_ASSETS" = "true" ]; then
-            echo "**assets.zip:**" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "$BASE_URL/assets.zip" >> /tmp/release_body.md
-            echo '```' >> /tmp/release_body.md
-            echo "" >> /tmp/release_body.md
+            cat << EOF >> /tmp/release_body.md
+          
+          **assets.zip:**
+          \`\`\`
+          $BASE_URL/assets.zip
+          \`\`\`
+          EOF
           fi
           
-          # Add changelog if exists
           if [ "$HAS_CHANGELOG" = "true" ]; then
-            echo "---" >> /tmp/release_body.md
-            echo "" >> /tmp/release_body.md
-            echo "### 📝 Changes" >> /tmp/release_body.md
+            cat << EOF >> /tmp/release_body.md
+          
+          ---
+          
+          ### 📝 Changes
+          EOF
             cat /tmp/changelog.md >> /tmp/release_body.md
           fi
           
@@ -284,7 +293,6 @@ jobs:
       - name: Generate latest release body
         if: steps.config.outputs.create_latest == 'true'
         run: |
-          TAG="${{ steps.tag_info.outputs.tag }}"
           PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
           VERSION="${{ steps.tag_info.outputs.version }}"
           RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
@@ -298,44 +306,52 @@ jobs:
           LATEST_TAG="$RELEASE_TYPE/$PACK_NAME/latest"
           BASE_URL="https://github.com/$REPO/releases/download/$LATEST_TAG"
           
-          cat << HEADER > /tmp/latest_body.md
+          cat << EOF > /tmp/latest_body.md
           ## $PACK_NAME - Latest Release
           
           **📌 Current version: v$VERSION**
           
           ### 📥 Asset Links
-          HEADER
+          EOF
           
           if [ "$HAS_MANIFEST" = "true" ]; then
-            echo "**manifest.json** (add this to Cardback):" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "$BASE_URL/manifest.json" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "" >> /tmp/latest_body.md
+            cat << EOF >> /tmp/latest_body.md
+          
+          **manifest.json** (add this to Cardback):
+          \`\`\`
+          $BASE_URL/manifest.json
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_RULES" = "true" ]; then
-            echo "**rules.lua:**" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "$BASE_URL/rules.lua" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "" >> /tmp/latest_body.md
+            cat << EOF >> /tmp/latest_body.md
+          
+          **rules.lua:**
+          \`\`\`
+          $BASE_URL/rules.lua
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_CARDS" = "true" ]; then
-            echo "**cards.json:**" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "$BASE_URL/cards.json" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "" >> /tmp/latest_body.md
+            cat << EOF >> /tmp/latest_body.md
+          
+          **cards.json:**
+          \`\`\`
+          $BASE_URL/cards.json
+          \`\`\`
+          EOF
           fi
           
           if [ "$HAS_ASSETS" = "true" ]; then
-            echo "**assets.zip:**" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "$BASE_URL/assets.zip" >> /tmp/latest_body.md
-            echo '```' >> /tmp/latest_body.md
-            echo "" >> /tmp/latest_body.md
+            cat << EOF >> /tmp/latest_body.md
+          
+          **assets.zip:**
+          \`\`\`
+          $BASE_URL/assets.zip
+          \`\`\`
+          EOF
           fi
       
       - name: Delete existing versioned release (if any)
