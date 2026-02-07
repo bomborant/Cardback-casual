@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed to list all tags
       
       - name: Parse tag info
         id: tag_info
@@ -442,6 +444,74 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Update summary release
+        if: steps.config.outputs.create_latest == 'true'
+        run: |
+          REPO="${{ github.repository }}"
+          
+          echo "=== Updating summary release ==="
+          
+          # Fetch all tags to ensure we have the latest
+          git fetch --tags --force
+          
+          # Build summary of all latest game releases
+          cat << 'EOF' > /tmp/summary.md
+          # 🎮 All Latest Games
+          
+          Quick links to all available game manifests. Copy any URL below and paste it into Cardback to add the game.
+          
+          ## Games
+          
+          | Game | Manifest URL |
+          |------|--------------|
+          EOF
+          
+          # Find all game/*/latest tags and add to table
+          GAME_COUNT=0
+          for tag in $(git tag -l "game/*/latest" | sort); do
+            GAME_NAME=$(echo "$tag" | cut -d'/' -f2)
+            MANIFEST_URL="https://github.com/$REPO/releases/download/$tag/manifest.json"
+            
+            # Format game name nicely (replace hyphens with spaces, title case)
+            DISPLAY_NAME=$(echo "$GAME_NAME" | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+            
+            echo "| $DISPLAY_NAME | \`$MANIFEST_URL\` |" >> /tmp/summary.md
+            GAME_COUNT=$((GAME_COUNT + 1))
+          done
+          
+          # Add footer
+          cat << EOF >> /tmp/summary.md
+          
+          ---
+          
+          **Total games available:** $GAME_COUNT
+          
+          *This release is automatically updated whenever a new game version is published.*
+          EOF
+          
+          echo "Summary content:"
+          cat /tmp/summary.md
+          
+          # Delete existing summary release and tag
+          gh release delete "games-summary" --yes 2>/dev/null || true
+          git tag -d "games-summary" 2>/dev/null || true
+          git push origin ":refs/tags/games-summary" 2>/dev/null || true
+          
+          # Create new tag at current commit
+          git tag "games-summary"
+          git push origin "games-summary"
+          
+          # Create the summary release and mark it as latest
+          gh release create "games-summary" \
+            --repo "$REPO" \
+            --title "📋 All Available Games" \
+            --notes-file /tmp/summary.md \
+            --latest
+          
+          echo "✓ Updated summary release with $GAME_COUNT games"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Print summary
         run: |
           RELEASE_TYPE="${{ steps.tag_info.outputs.release_type }}"
@@ -465,6 +535,9 @@ jobs:
             echo ""
             echo "🔄 Latest:"
             echo "   https://github.com/$REPO/releases/tag/$RELEASE_TYPE/$PACK_NAME/latest"
+            echo ""
+            echo "📋 Summary (pinned):"
+            echo "   https://github.com/$REPO/releases/tag/games-summary"
           fi
           
           echo ""
