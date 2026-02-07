@@ -10,6 +10,6 @@
   "resources": {
     "rules_url": "./rules.lua",
     "cards_url": "./cards.json",
-    "assets_url": "./cards"
+    "assets_url": "./assets.zip"
   }
 }
