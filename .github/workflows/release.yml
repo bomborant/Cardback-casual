@@ -144,18 +144,34 @@ jobs:
             echo "⊘ cards.json (not found, skipping)"
           fi
           
-          # Assets zip
-          if [ -d "$SOURCE_DIR/cards" ]; then
-            FILE_COUNT=$(ls -1 "$SOURCE_DIR/cards" | wc -l)
-            if [ "$FILE_COUNT" -gt 0 ]; then
-              (cd "$SOURCE_DIR/cards" && zip -r "../../../$ASSETS_DIR/assets.zip" ./*)
-              echo "✓ assets.zip ($FILE_COUNT files)"
-              HAS_ASSETS="true"
-            else
-              echo "⊘ cards/ folder empty (skipping)"
+          # Assets zip - include all asset folders (cards/, tokens/, etc.)
+          # Each folder becomes a top-level directory in the zip
+          ASSET_FOLDERS=""
+          ASSET_COUNT=0
+          
+          for folder in cards tokens boards pieces; do
+            if [ -d "$SOURCE_DIR/$folder" ]; then
+              FILE_COUNT=$(find "$SOURCE_DIR/$folder" -type f | wc -l)
+              if [ "$FILE_COUNT" -gt 0 ]; then
+                ASSET_FOLDERS="$ASSET_FOLDERS $folder"
+                ASSET_COUNT=$((ASSET_COUNT + FILE_COUNT))
+                echo "  Found $folder/ ($FILE_COUNT files)"
+              fi
             fi
+          done
+          
+          if [ -n "$ASSET_FOLDERS" ]; then
+            # Create zip with folder structure preserved
+            (cd "$SOURCE_DIR" && zip -r "../../$ASSETS_DIR/assets.zip" $ASSET_FOLDERS)
+            echo "✓ assets.zip ($ASSET_COUNT files in:$ASSET_FOLDERS)"
+            HAS_ASSETS="true"
+            
+            # Show zip contents for verification
+            echo ""
+            echo "  Zip contents:"
+            unzip -l "$ASSETS_DIR/assets.zip" | head -20
           else
-            echo "⊘ cards/ folder (not found, skipping)"
+            echo "⊘ No asset folders found (cards/, tokens/, etc.)"
           fi
           
           echo ""
@@ -184,14 +200,12 @@ jobs:
           if [ -f "$SOURCE_DIR/CHANGELOG.md" ]; then
             echo "Found CHANGELOG.md, searching for v$VERSION..."
             
-            # Extract section: start at version header, stop at next ## or EOF
             CHANGELOG_CONTENT=$(awk "
               /^## \\[?v?${VERSION}\\]?/ { found=1; next }
               found && /^## / { exit }
               found { print }
             " "$SOURCE_DIR/CHANGELOG.md")
             
-            # Trim whitespace
             CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             
             if [ -n "$CHANGELOG_CONTENT" ]; then
@@ -212,7 +226,6 @@ jobs:
           fi
       
       - name: Generate release body
-        id: body
         run: |
           TAG="${{ steps.tag_info.outputs.tag }}"
           PACK_NAME="${{ steps.tag_info.outputs.pack_name }}"
@@ -228,7 +241,6 @@ jobs:
           
           BASE_URL="https://github.com/$REPO/releases/download/$TAG"
           
-          # Build release body
           cat << EOF > /tmp/release_body.md
           ## $PACK_NAME v$VERSION
           
@@ -286,9 +298,6 @@ jobs:
           EOF
             cat /tmp/changelog.md >> /tmp/release_body.md
           fi
-          
-          echo "Generated release body:"
-          cat /tmp/release_body.md
       
       - name: Generate latest release body
         if: steps.config.outputs.create_latest == 'true'
