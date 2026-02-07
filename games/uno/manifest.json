@@ -10,6 +10,6 @@
   "resources": {
     "rules_url": "./rules.lua",
     "cards_url": "./cards.json",
-    "assets_url": "https://github.com/bomborant/Cardback-casual/releases/download/pack/uno/0.1/assets.zip"
+    "assets_url": "https://github.com/bomborant/Cardback-casual/releases/download/pack/uno/0.2/assets.zip"
   }
 }
