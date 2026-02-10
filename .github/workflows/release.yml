@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed to list all tags
+          fetch-depth: 0
       
       - name: Parse tag info
         id: tag_info
@@ -146,7 +146,7 @@ jobs:
             echo "⊘ cards.json (not found, skipping)"
           fi
           
-          # Assets zip - include all folders under assets/ directory
+          # Assets zip - from assets/ folder
           if [ -d "$SOURCE_DIR/assets" ]; then
             echo ""
             echo "Found assets/ directory, scanning subfolders..."
@@ -154,7 +154,6 @@ jobs:
             ASSET_FOLDERS=""
             ASSET_COUNT=0
             
-            # Find all subdirectories in assets/
             for folder_path in "$SOURCE_DIR/assets"/*/; do
               if [ -d "$folder_path" ]; then
                 folder=$(basename "$folder_path")
@@ -168,15 +167,9 @@ jobs:
             done
             
             if [ -n "$ASSET_FOLDERS" ]; then
-              # Zip from inside assets/ directory to preserve folder structure
               (cd "$SOURCE_DIR/assets" && zip -r "../../../$ASSETS_DIR/assets.zip" $ASSET_FOLDERS)
               echo "✓ assets.zip ($ASSET_COUNT files in:$ASSET_FOLDERS)"
               HAS_ASSETS="true"
-              
-              # Show zip contents for verification
-              echo ""
-              echo "  Zip contents preview:"
-              unzip -l "$ASSETS_DIR/assets.zip" | head -20
             else
               echo "⊘ No subfolders with files found in assets/"
             fi
@@ -251,14 +244,12 @@ jobs:
           
           BASE_URL="https://github.com/$REPO/releases/download/$TAG"
           
-          # Start with header
           cat << EOF > /tmp/release_body.md
           ## $PACK_NAME v$VERSION
           
           **Type:** \`$RELEASE_TYPE\`
           EOF
           
-          # Add changelog right after header (if exists)
           if [ "$HAS_CHANGELOG" = "true" ]; then
             cat << EOF >> /tmp/release_body.md
           
@@ -267,7 +258,6 @@ jobs:
             cat /tmp/changelog.md >> /tmp/release_body.md
           fi
           
-          # Add asset links section
           cat << EOF >> /tmp/release_body.md
           
           ---
@@ -332,14 +322,12 @@ jobs:
           LATEST_TAG="$RELEASE_TYPE/$PACK_NAME/latest"
           BASE_URL="https://github.com/$REPO/releases/download/$LATEST_TAG"
           
-          # Start with header
           cat << EOF > /tmp/latest_body.md
           ## $PACK_NAME - Latest Release
           
           **📌 Current version: v$VERSION**
           EOF
           
-          # Add changelog right after header (if exists)
           if [ "$HAS_CHANGELOG" = "true" ]; then
             cat << EOF >> /tmp/latest_body.md
           
@@ -348,7 +336,6 @@ jobs:
             cat /tmp/changelog.md >> /tmp/latest_body.md
           fi
           
-          # Add asset links section
           cat << EOF >> /tmp/latest_body.md
           
           ---
@@ -469,7 +456,7 @@ jobs:
           # Fetch all tags to ensure we have the latest
           git fetch --tags --force
           
-          # Build summary of all latest game releases
+          # Build summary content
           cat << 'EOF' > /tmp/summary.md
           # 🎮 All Latest Games
           
@@ -507,22 +494,43 @@ jobs:
           echo "Summary content:"
           cat /tmp/summary.md
           
-          # Delete existing summary release and tag
+          # Nuclear delete: Remove the release AND the tag completely
+          echo "🧹 Purging old summary tag and release..."
           gh release delete "games-summary" --yes 2>/dev/null || true
           git tag -d "games-summary" 2>/dev/null || true
           git push origin ":refs/tags/games-summary" 2>/dev/null || true
           
-          # Create new tag at current commit
+          # Small delay to ensure GitHub processes the deletion
+          sleep 2
+          
+          # Recreate: Create a fresh tag and push it
           git tag "games-summary"
           git push origin "games-summary"
           
-          # Create the summary release and mark it as latest
+          # Publish: Create the release
           gh release create "games-summary" \
             --repo "$REPO" \
             --title "📋 All Available Games" \
             --notes-file /tmp/summary.md \
             --latest
           
+          # The magic trick: Patch the API to set the date to "Right Now"
+          # This forces the sorting algorithm to put it at index 0
+          sleep 1
+          
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "🚀 Bumping 'published_at' to $CURRENT_DATE"
+          
+          # Get the release ID to patch it
+          RELEASE_ID=$(gh api repos/$REPO/releases/tags/games-summary --jq '.id')
+          
+          gh api \
+            -X PATCH \
+            /repos/$REPO/releases/$RELEASE_ID \
+            -f published_at="$CURRENT_DATE" \
+            -f make_latest="true"
+          
+          echo "✅ Summary release is now the newest and latest"
           echo "✓ Updated summary release with $GAME_COUNT games"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
