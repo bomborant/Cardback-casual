@@ -14,3 +14,6 @@
 
 ## 0.5
 - Why not one more
+
+## 0.6
+- Hoping this is the last test for now
